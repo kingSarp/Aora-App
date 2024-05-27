@@ -12,7 +12,7 @@ const CustomButton = ({
   title: string;
   handlePress: any;
   containerStyle: string;
-  textStyles: string;
+  textStyles: any;
   isloading: any;
 }) => {
   return (
