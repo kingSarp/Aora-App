@@ -1,4 +1,6 @@
-import { Account, Client } from "react-native-appwrite";
+import SignIn from "app/(auth)/sign-in";
+import { Alert } from "react-native";
+import { Account, Avatars, Client, Databases, ID } from "react-native-appwrite";
 export const appwrite = {
   endpoint: "https://cloud.appwrite.io/v1",
   projectId: "66551087003369abc828",
@@ -18,15 +20,85 @@ client
   .setPlatform(appwrite.platform); // Your application ID or bundle ID.
 
 const account = new Account(client);
+const avatars = new Avatars(client);
+const databases = new Databases(client);
 
-export const createUser = () => {
-  // Register User
-  account.create(ID.unique(), "me@example.com", "password", "Jane Doe").then(
-    function (response) {
-      console.log(response);
-    },
-    function (error) {
-      console.log(error);
-    }
-  );
+const clearExistingSession = async () => {
+  try {
+    await account.deleteSession("current");
+  } catch (error) {
+    console.log("Error clearing sessions:", error);
+  }
 };
+
+export const createUser = async ({
+  email,
+  password,
+  username,
+}: {
+  email: string;
+  password: string;
+  username: string;
+}) => {
+  // Register User
+
+  try {
+    await clearExistingSession(); // Clear any existing session
+
+    const newAccount = await account.create(
+      ID.unique(),
+      email,
+      password,
+      username
+    );
+    if (!newAccount) throw new Error("Account creation failed");
+
+    const avatarURl = avatars.getInitials(username, 500, 500, "#FFFFFF");
+
+    await signIn({ email, password });
+    const newUser = await databases.createDocument(
+      appwrite.databaseId,
+      appwrite.userCollectionId,
+      ID.unique(),
+      {
+        accountId: newAccount.$id,
+        email,
+        username,
+        avatar: avatarURl,
+      }
+    );
+
+    return newUser;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error creating user:", error);
+      throw new Error(`User creation failed: ${error.message}`);
+    } else {
+      console.error("Error creating user:", error);
+      throw new Error("User creation failed: unknown error");
+    }
+  }
+};
+
+export async function signIn({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
+  try {
+    await clearExistingSession(); // Clear any existing session before signing in
+    const session = await account.createEmailPasswordSession(email, password);
+    console.log("Session created:", session);
+    return session;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error creating user:", error);
+      throw new Error(`Sign-in failed: ${error.message}`);
+    } else {
+      console.error("Error creating user:", error);
+      throw new Error("Sign-in failed: unknown error");
+    }
+  }
+}

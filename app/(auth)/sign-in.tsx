@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, Alert } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../../constants";
 import FormField from "components/FormField";
 import CustomButton from "components/CustomButton";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import { createUser, signIn } from "lib/appwrite";
 
 const SignIn: React.FC = () => {
   const [form, setForm] = useState({
@@ -14,8 +15,39 @@ const SignIn: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const Submit = () => {};
+  const Submit = async () => {
+    if (form.email === "" || form.password === "") {
+      Alert.alert("Error", "Please fill in all the fields");
+      return; // Return early to prevent submission
+    }
 
+    setIsSubmitting(true);
+    try {
+      const result = await signIn({
+        email: form.email,
+        password: form.password,
+      });
+      Alert.alert("Success", `User logged in: ${result.userId}`);
+
+      // setUser(true);
+      // Navigate to home
+      console.log("Navigation to home");
+      router.replace("/home");
+    } catch (error) {
+      //error was asking for type hence this solution
+      //Reason: The error object is of type unknown by default.
+      //Using instanceof Error type guard ensures that error is treated as an instance of the Error class,
+      //allowing access to the message property safely.
+      //If the error is not an instance of Error, a generic error message is displayed.
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("Error", "An unknown error occurred");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView contentContainerStyle={{ height: "100%" }}>

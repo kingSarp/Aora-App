@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, Alert } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../../constants";
 import FormField from "components/FormField";
 import CustomButton from "components/CustomButton";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import { createUser } from "lib/appwrite";
 
 const SignUp: React.FC = () => {
   const [form, setForm] = useState({
@@ -15,7 +16,44 @@ const SignUp: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const Submit = () => {};
+  const handleChangeText = (key: string, value: string) => {
+    setForm((prevForm) => ({ ...prevForm, [key]: value }));
+  };
+
+  const Submit = async () => {
+    if (form.username === "" || form.email === "" || form.password === "") {
+      Alert.alert("Error", "Please fill in all the fields");
+      return; // Return early to prevent submission
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await createUser({
+        email: form.email,
+        password: form.password,
+        username: form.username,
+      });
+      Alert.alert("Success", `User created with ID: ${result.userId}`);
+
+      // setUser(true);
+      // Navigate to home
+      console.log("Navigation to home");
+      router.replace("/home");
+    } catch (error) {
+      //error was asking for type hence this solution
+      //Reason: The error object is of type unknown by default.
+      //Using instanceof Error type guard ensures that error is treated as an instance of the Error class,
+      //allowing access to the message property safely.
+      //If the error is not an instance of Error, a generic error message is displayed.
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("Error", "An unknown error occurred");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -32,20 +70,23 @@ const SignUp: React.FC = () => {
           <FormField
             title="User Name"
             value={form.username}
-            handleChangeText={(e: any) => setForm({ ...form, username: e })}
+            // handleChangeText={(e: any) => setForm({ ...form, username: e })}
+            handleChangeText={(e: string) => handleChangeText("username", e)}
             otherStyles="mt-10"
           />
           <FormField
             title="Email"
             value={form.email}
-            handleChangeText={(e: any) => setForm({ ...form, email: e })}
+            // handleChangeText={(e: any) => setForm({ ...form, email: e })}
+            handleChangeText={(e: string) => handleChangeText("email", e)}
             otherStyles="mt-7"
             keyboardType="email-address"
           />
           <FormField
             title="Password"
             value={form.password}
-            handleChangeText={(e: any) => setForm({ ...form, password: e })}
+            // handleChangeText={(e: any) => setForm({ ...form, password: e })}
+            handleChangeText={(e: string) => handleChangeText("password", e)}
             otherStyles="mt-7"
           />
           <CustomButton
