@@ -6,8 +6,12 @@ import FormField from "components/FormField";
 import CustomButton from "components/CustomButton";
 import { Link, router } from "expo-router";
 import { createUser } from "lib/appwrite";
+import { useGlobalContext } from "context/GlobalProvider";
 
 const SignUp: React.FC = () => {
+  const { setUser, setIsLoggedIn } = useGlobalContext();
+
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -35,9 +39,10 @@ const SignUp: React.FC = () => {
       });
       Alert.alert("Success", `User created with ID: ${result.userId}`);
 
-      // setUser(true);
-      // Navigate to home
-      console.log("Navigation to home");
+      setUser(result);
+      setIsLoggedIn(true);
+      
+
       router.replace("/home");
     } catch (error) {
       //error was asking for type hence this solution

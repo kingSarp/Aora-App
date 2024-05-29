@@ -1,0 +1,38 @@
+Documentation with Toy Box Analogy
+GlobalContext
+Purpose: A context object to hold global state for user authentication and related data (a toy box to keep important toys).
+Default Value: An empty object {} (an empty toy box).
+
+useGlobalContext
+Purpose: A custom hook to easily access the values stored in GlobalContext (a magic key to open the toy box and get the toys inside).
+Usage: const context = useGlobalContext();
+
+GlobalProvider
+Props:
+children: The components that will be wrapped by the provider and have access to the global context (the parts of the app that can play with the toys).
+Purpose: A context provider component that initializes and manages global state, and provides it to its children (sets up the toy box with important toys and shares it).
+State Managed:
+isLoggedIn (boolean): Indicates if the user is logged in (if someone is playing with the toys).
+user (object): Stores the current user's information (who is playing with the toys).
+isloading (boolean): Indicates if the user data is currently being loaded (if we are looking for someone to play with the toys).
+
+useEffect in GlobalProvider
+Purpose: To fetch the current user data when the component mounts and update the state accordingly (check who is playing with the toys).
+Dependencies: An empty array [], meaning it only runs once when the component mounts.
+
+
+
+
+  +  isloading,
++  isLoggedIn,
++}: {
++  isloading: boolean;
++  isLoggedIn: boolean;
++}): React.ReactElement | null {
+-export default function Index() {
+-  
+-  const { isloading, isLoggedIn } = useGlobalContext();
+-
+   if (!isloading && isLoggedIn) {
+     return <Redirect href="/home" />;
+   }

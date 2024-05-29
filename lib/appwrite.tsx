@@ -1,6 +1,13 @@
 import SignIn from "app/(auth)/sign-in";
 import { Alert } from "react-native";
-import { Account, Avatars, Client, Databases, ID } from "react-native-appwrite";
+import {
+  Account,
+  Avatars,
+  Client,
+  Databases,
+  ID,
+  Query,
+} from "react-native-appwrite";
 export const appwrite = {
   endpoint: "https://cloud.appwrite.io/v1",
   projectId: "66551087003369abc828",
@@ -80,13 +87,13 @@ export const createUser = async ({
   }
 };
 
-export async function signIn({
+export const signIn = async ({
   email,
   password,
 }: {
   email: string;
   password: string;
-}) {
+}) => {
   try {
     await clearExistingSession(); // Clear any existing session before signing in
     const session = await account.createEmailPasswordSession(email, password);
@@ -101,4 +108,27 @@ export async function signIn({
       throw new Error("Sign-in failed: unknown error");
     }
   }
-}
+};
+
+export const getCurrentUser = async () => {
+  try {
+    const currentAccount = await account.get();
+    if (!currentAccount) throw new Error("Error fetching user");
+    const currentUser = await databases.listDocuments(
+      appwrite.databaseId,
+      appwrite.userCollectionId,
+      [Query.equal("accountId", currentAccount.$id)]
+    );
+    if (!currentAccount) throw new Error();
+
+    return currentUser.documents[0];
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error fetching user:", error);
+      throw new Error(`Error fetching user: ${error.message}`);
+    } else {
+      console.error("Error fetching user:", error);
+      throw new Error("Error fetching user: unknown error");
+    }
+  }
+};
